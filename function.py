@@ -1,7 +1,7 @@
 import io
 import os
+import json
 from typing import Tuple
-from flask import Flask, request, make_response
 from PIL import Image
 import requests
 
@@ -38,33 +38,8 @@ def draw_scene(scene) -> Image.Image:
     return frame
 
 
-app = Flask(__name__)
-
-@app.route("/", methods=['GET']) # type:ignore
-def greating():
-    return "Всё хорошо. Работаем"
-
-
-@app.route("/image", methods=['POST']) # type:ignore
-def main():
-    scene = request.json
-
-    frame = draw_scene(scene)
-    output = io.BytesIO()
-    frame.save(output, format='PNG')
-    frame.close()
-
-    response = make_response(output.getvalue())
-    output.close()
-
-    response.headers.set('Content-Type', 'image/png')
-
-    return response
-
-
-@app.route("/upload", methods=['POST']) # type:ignore
-def upload():
-    scene = request.json
+def handler(event, context):
+    scene = json.loads(event['body'])
 
     frame = draw_scene(scene)
     output = io.BytesIO()
@@ -81,34 +56,11 @@ def upload():
 
     output.close()
 
-    return resp.json()["image"]
-
-
-
-def handler(event, context):
-    request = json.loads(event['body'])
-
-    reply = SalutReply()
-
-    reply.text('Привет.')
-    reply.text(f'Интент запроса {request["payload"]["intent"]}.')
-
-    intent = f'{request["payload"]["intent"]}1' if request["payload"]["intent"] else 'hello'
-
-    reply.text(f'Интент ответа {intent}.')
-    res = reply.build(request)
-    res['payload']['intent'] = intent
-
     return {
         'statusCode': 200,
         'headers': {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         },
         'isBase64Encoded': False,
-        'body': json.dumps(res),
+        'body': resp.json()["image"]
     }
-
-
-if __name__ == "__main__":
-    from waitress import serve
-    serve(app, host="0.0.0.0", port=5000)
