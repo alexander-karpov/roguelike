@@ -84,31 +84,6 @@ def upload():
     return resp.json()["image"]
 
 
-
-def handler(event, context):
-    request = json.loads(event['body'])
-
-    reply = SalutReply()
-
-    reply.text('Привет.')
-    reply.text(f'Интент запроса {request["payload"]["intent"]}.')
-
-    intent = f'{request["payload"]["intent"]}1' if request["payload"]["intent"] else 'hello'
-
-    reply.text(f'Интент ответа {intent}.')
-    res = reply.build(request)
-    res['payload']['intent'] = intent
-
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-        },
-        'isBase64Encoded': False,
-        'body': json.dumps(res),
-    }
-
-
 if __name__ == "__main__":
     from waitress import serve
     serve(app, host="0.0.0.0", port=5000)
